@@ -36,7 +36,7 @@ src/
 │   │   ├── BoardMapper.tsx        Board -> formato de react-chessboard (posición y dibujo de piezas)
 │   │   └── SquareHighlighter.ts   colores de casillas: pieza elegida, destinos, rey en jaque
 │   └── storage/                   adaptador de salida
-│       └── InMemoryGameRepository.ts
+│       └── LocalStorageGameRepository.ts  guarda la partida en el navegador (JSON)
 └── main.tsx                       composition root: crea y conecta todo
 test/core/                         tests del núcleo (incluye extension.test.ts: pieza nueva y tablero 10x10)
 test/adapters/                     tests de los adaptadores que no necesitan navegador
@@ -81,17 +81,18 @@ Al ejecutar, el orden es UI → GameService → repositorio, pero en el código 
 | Polimorfismo / herencia      | `Piece` abstracta, cada subclase implementa `getMoves()`                  |
 | Reutilización por herencia   | `Piece.slide()` y `Piece.jump()`: código común en la clase base, cada pieza pasa sus direcciones |
 | Value object                 | `Square`                                                                  |
-| Repository                   | `GameRepositoryPort` + `InMemoryGameRepository`                           |
+| Repository                   | `GameRepositoryPort` + `LocalStorageGameRepository`                       |
 | Mapper                       | `BoardMapper`                                                             |
 | Abierto/cerrado              | Pieza nueva = subclase de `Piece`; variante nueva = clase `IBoardSetup`. No se toca nada existente |
 
 ## Cómo extenderlo
 
 - **Pieza nueva:** una subclase de `Piece` con `getSymbol()` y `getMoves()`. Puede combinar movimientos ya existentes (`Knight.OFFSETS`, `Bishop.DIRECTIONS`...). La UI la dibuja con su letra.
+- **Guardar la pieza nueva:** pasar su clase a `LocalStorageGameRepository` en `main.tsx` (la recrea por su letra al cargar).
 - **Otro tablero:** una clase que implemente `IBoardSetup` y cree un `new Board(columnas, filas)` con sus piezas. Se elige en `main.tsx`.
 
 Ejemplos de las dos cosas en `test/core/domain/extension.test.ts`.
 
 ## Pendiente
 
-Enroque, captura al paso, coronación, tablas por repetición o regla de 50 movimientos, persistencia en `localStorage`.
+Enroque, captura al paso, coronación, tablas por repetición o regla de 50 movimientos.

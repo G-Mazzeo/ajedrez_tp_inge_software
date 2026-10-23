@@ -15,7 +15,7 @@ flowchart TB
   end
 
   subgraph STORAGE["SALIDA · adapters/storage"]
-    Repo["InMemoryGameRepository"]
+    Repo["LocalStorageGameRepository"]
   end
 
   subgraph CORE["NÚCLEO · core"]
@@ -127,11 +127,15 @@ classDiagram
     +save(game: Game) void
     +load() Game
   }
-  class InMemoryGameRepository {
-    <<adaptador de salida>>
-    -game: Game
+  class LocalStorageGameRepository {
+    <<adaptador de salida · localStorage>>
+    -KEY$
+    -storage: KeyValueStorage
+    -pieceClasses: Map~string, PieceClass~
     +save(game: Game) void
     +load() Game
+    -createPiece(symbol: string, color: Color) Piece
+    -toColor(value: string)$ Color
   }
 
   class Game {
@@ -166,11 +170,12 @@ classDiagram
   Game *-- Board
   StandardSetup ..|> IBoardSetup : implementa
 
-  InMemoryGameRepository ..|> GameRepositoryPort : implementa
+  LocalStorageGameRepository ..|> GameRepositoryPort : implementa
+  LocalStorageGameRepository ..> Board : reconstruye
 
   main ..> ChessBoardView : crea
   main ..> GameService : crea
-  main ..> InMemoryGameRepository : crea
+  main ..> LocalStorageGameRepository : crea
   main ..> StandardSetup : crea
 ```
 
@@ -315,4 +320,5 @@ classDiagram
 - `Board.entries()` devuelve `[Square, Piece][]`. En el diagrama figura como `Square_Piece[]` porque Mermaid no acepta tuplas.
 - `pieceAt()` y `findKing()` pueden devolver `undefined`, y `load()` puede devolver `null`.
 - `OFFSETS` y `DIRECTIONS` son públicas para que una pieza nueva pueda reutilizarlas (ej. caballo + alfil).
+- `KeyValueStorage` es la parte de `localStorage` que usa el repositorio (`getItem`, `setItem`); en los tests se le pasa uno falso. `PieceClass` es cualquier clase de pieza (`new (color) => Piece`): con ellas recrea las piezas por su letra.
 - `PieceRender` es el tipo de cada función de `PieceRenderObject` (react-chessboard): dibuja una pieza.

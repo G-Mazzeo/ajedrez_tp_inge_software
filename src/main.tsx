@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { InMemoryGameRepository } from './adapters/storage/InMemoryGameRepository';
+import { LocalStorageGameRepository } from './adapters/storage/LocalStorageGameRepository';
 import { BoardMapper } from './adapters/ui/BoardMapper';
 import { ChessBoardView } from './adapters/ui/ChessBoardView';
 import { SquareHighlighter } from './adapters/ui/SquareHighlighter';
@@ -8,8 +8,8 @@ import { GameService } from './core/application/GameService';
 import { StandardSetup } from './core/domain/setups/StandardSetup';
 
 // Composition root: el único lugar que conoce las clases concretas y las conecta.
-// Para guardar en localStorage: crear LocalStorageGameRepository y cambiar solo esta línea.
-const repository = new InMemoryGameRepository();
+// La partida se guarda en el navegador. Para guardarla en otro lado: otra clase GameRepositoryPort y cambiar solo esta línea.
+const repository = new LocalStorageGameRepository(window.localStorage);
 // Para jugar otra variante (otro tamaño, otras piezas): crear otra clase IBoardSetup y cambiar solo esta línea.
 const setup = new StandardSetup();
 const service = new GameService(repository, setup);
