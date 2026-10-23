@@ -66,3 +66,17 @@ describe('GameService: estado', () => {
     expect(service.getStatus()).toBe(GameStatus.CHECKMATE);
   });
 });
+
+describe('GameService: movimientos posibles', () => {
+  it('devuelve los destinos legales de una pieza', () => {
+    const service = new GameService(new FakeGameRepository());
+    const targets = service.getLegalMoves(at('g1')).map((square) => square.name());
+    expect(targets.sort()).toEqual(['f3', 'h3']);
+  });
+
+  it('no devuelve nada para piezas del rival o casillas vacías', () => {
+    const service = new GameService(new FakeGameRepository());
+    expect(service.getLegalMoves(at('e7'))).toEqual([]);
+    expect(service.getLegalMoves(at('e4'))).toEqual([]);
+  });
+});

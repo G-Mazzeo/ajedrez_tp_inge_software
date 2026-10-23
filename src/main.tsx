@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { InMemoryGameRepository } from './adapters/storage/InMemoryGameRepository';
 import { BoardMapper } from './adapters/ui/BoardMapper';
 import { ChessBoardView } from './adapters/ui/ChessBoardView';
+import { SquareHighlighter } from './adapters/ui/SquareHighlighter';
 import { GameService } from './core/application/GameService';
 
 // Composition root: el único lugar que conoce las clases concretas y las conecta.
@@ -10,9 +11,10 @@ import { GameService } from './core/application/GameService';
 const repository = new InMemoryGameRepository();
 const service = new GameService(repository);
 const mapper = new BoardMapper();
+const highlighter = new SquareHighlighter();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ChessBoardView service={service} mapper={mapper} />
+    <ChessBoardView service={service} mapper={mapper} highlighter={highlighter} />
   </StrictMode>,
 );

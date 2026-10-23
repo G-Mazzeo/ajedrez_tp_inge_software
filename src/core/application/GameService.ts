@@ -30,6 +30,10 @@ export class GameService implements GameServicePort {
     return moved;
   }
 
+  public getLegalMoves(from: Square): Square[] {
+    return this.game.legalMovesFrom(from);
+  }
+
   public getBoard(): Board {
     return this.game.getBoard();
   }

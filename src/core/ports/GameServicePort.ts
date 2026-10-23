@@ -10,6 +10,8 @@ import type { Square } from '../domain/Square';
 export interface GameServicePort {
   newGame(): void;
   move(from: Square, to: Square): boolean;
+  /** Casillas a las que puede ir la pieza que está en `from` (vacío si no es del turno). */
+  getLegalMoves(from: Square): Square[];
   getBoard(): Board;
   getTurn(): Color;
   getStatus(): GameStatus;

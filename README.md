@@ -32,7 +32,8 @@ src/
 ├── adapters/                      AFUERA: lo técnico
 │   ├── ui/                        adaptador de entrada (React)
 │   │   ├── ChessBoardView.tsx
-│   │   └── BoardMapper.ts         Board -> formato de react-chessboard
+│   │   ├── BoardMapper.ts         Board -> formato de react-chessboard
+│   │   └── SquareHighlighter.ts   colores de casillas: pieza elegida, destinos, rey en jaque
 │   └── storage/                   adaptador de salida
 │       └── InMemoryGameRepository.ts
 └── main.tsx                       composition root: crea y conecta todo
