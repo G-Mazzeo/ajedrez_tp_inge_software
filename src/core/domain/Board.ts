@@ -1,30 +1,33 @@
-import { Color } from './Color';
-import { Bishop } from './pieces/Bishop';
-import { King } from './pieces/King';
-import { Knight } from './pieces/Knight';
-import { Pawn } from './pieces/Pawn';
+import type { Color } from './Color';
 import type { Piece } from './pieces/Piece';
-import { PieceType } from './PieceType';
-import { Queen } from './pieces/Queen';
-import { Rook } from './pieces/Rook';
 import { Square } from './Square';
 
-/** Qué pieza hay en cada casilla. Solo guarda las casillas ocupadas. */
+/**
+ * Qué pieza hay en cada casilla. Solo guarda las casillas ocupadas.
+ * El tamaño se elige al crearlo (8x8 por defecto); cómo se llena lo decide un IBoardSetup.
+ */
 export class Board {
+  private readonly files: number;
+  private readonly ranks: number;
   // La clave es el nombre de la casilla ('e2'): dos objetos Square iguales serían claves distintas en un Map.
   private readonly pieces = new Map<string, Piece>();
 
-  /** La posición inicial del ajedrez clásico. */
-  public static initial(): Board {
-    const board = new Board();
-    const backRank = [Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook];
-    backRank.forEach((PieceClass, file) => {
-      board.place(new Square(file, 0), new PieceClass(Color.WHITE));
-      board.place(new Square(file, 1), new Pawn(Color.WHITE));
-      board.place(new Square(file, 6), new Pawn(Color.BLACK));
-      board.place(new Square(file, 7), new PieceClass(Color.BLACK));
-    });
-    return board;
+  constructor(files: number = 8, ranks: number = 8) {
+    this.files = files;
+    this.ranks = ranks;
+  }
+
+  public getFiles(): number {
+    return this.files;
+  }
+
+  public getRanks(): number {
+    return this.ranks;
+  }
+
+  /** ¿La casilla está dentro de este tablero? */
+  public contains(square: Square): boolean {
+    return square.file >= 0 && square.file < this.files && square.rank >= 0 && square.rank < this.ranks;
   }
 
   public pieceAt(square: Square): Piece | undefined {
@@ -36,6 +39,7 @@ export class Board {
   }
 
   public place(square: Square, piece: Piece): void {
+    if (!this.contains(square)) throw new Error(`${square.name()} está fuera del tablero`);
     this.pieces.set(square.name(), piece);
   }
 
@@ -44,7 +48,7 @@ export class Board {
     const piece = this.pieceAt(from);
     if (!piece) throw new Error(`No hay pieza en ${from.name()}`);
     this.pieces.delete(from.name());
-    this.pieces.set(to.name(), piece);
+    this.place(to, piece);
   }
 
   public entries(): [Square, Piece][] {
@@ -52,7 +56,7 @@ export class Board {
   }
 
   public findKing(color: Color): Square | undefined {
-    return this.entries().find(([, piece]) => piece.getType() === PieceType.KING && piece.getColor() === color)?.[0];
+    return this.entries().find(([, piece]) => piece.isKing() && piece.getColor() === color)?.[0];
   }
 
   /** ¿Alguna pieza de `attacker` puede llegar a esta casilla? */
@@ -65,7 +69,7 @@ export class Board {
 
   /** Copia para simular un movimiento sin tocar este tablero. Las piezas no cambian, se pueden compartir. */
   public clone(): Board {
-    const copy = new Board();
+    const copy = new Board(this.files, this.ranks);
     for (const [square, piece] of this.entries()) copy.place(square, piece);
     return copy;
   }

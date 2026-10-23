@@ -29,10 +29,11 @@ export function ChessBoardView({ service, mapper, highlighter }: IChessBoardView
   const [status, setStatus] = useState(() => service.getStatus());
   const [selected, setSelected] = useState<Square | null>(null);
 
+  const board = service.getBoard();
   const targets = selected ? service.getLegalMoves(selected) : [];
   const isCheck = status === GameStatus.CHECK || status === GameStatus.CHECKMATE;
-  const kingInCheck = isCheck ? service.getBoard().findKing(turn) : undefined;
-  const squareStyles = highlighter.highlight(service.getBoard(), selected, targets, kingInCheck);
+  const kingInCheck = isCheck ? board.findKing(turn) : undefined;
+  const squareStyles = highlighter.highlight(board, selected, targets, kingInCheck);
 
   const refresh = (): void => {
     setPosition(mapper.toPosition(service.getBoard()));
@@ -97,6 +98,9 @@ export function ChessBoardView({ service, mapper, highlighter }: IChessBoardView
       <Chessboard
         options={{
           position,
+          pieces: mapper.toPieces(board),
+          chessboardColumns: board.getFiles(),
+          chessboardRows: board.getRanks(),
           squareStyles,
           onPieceDrag: handlePieceDrag,
           onPieceDrop: handlePieceDrop,

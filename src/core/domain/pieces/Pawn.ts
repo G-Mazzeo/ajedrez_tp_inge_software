@@ -1,30 +1,30 @@
 import type { Board } from '../Board';
 import { Color } from '../Color';
-import { PieceType } from '../PieceType';
 import type { Square } from '../Square';
 import { Piece } from './Piece';
 
 /** Avanza uno (o dos desde su fila inicial) y captura en diagonal. Todavía sin coronación ni al paso. */
 export class Pawn extends Piece {
-  public getType(): PieceType {
-    return PieceType.PAWN;
+  public getSymbol(): string {
+    return 'P';
   }
 
   public getMoves(from: Square, board: Board): Square[] {
     const forward = this.color === Color.WHITE ? 1 : -1;
-    const startRank = this.color === Color.WHITE ? 1 : 6;
+    // La segunda fila de cada lado, sea cual sea el tamaño del tablero.
+    const startRank = this.color === Color.WHITE ? 1 : board.getRanks() - 2;
     const moves: Square[] = [];
 
     const oneStep = from.offset(0, forward);
-    if (oneStep.isOnBoard() && board.isEmpty(oneStep)) {
+    if (board.contains(oneStep) && board.isEmpty(oneStep)) {
       moves.push(oneStep);
       const twoSteps = from.offset(0, 2 * forward);
-      if (from.rank === startRank && board.isEmpty(twoSteps)) moves.push(twoSteps);
+      if (from.rank === startRank && board.contains(twoSteps) && board.isEmpty(twoSteps)) moves.push(twoSteps);
     }
 
     for (const side of [-1, 1]) {
       const diagonal = from.offset(side, forward);
-      if (diagonal.isOnBoard() && this.isEnemyAt(diagonal, board)) moves.push(diagonal);
+      if (board.contains(diagonal) && this.isEnemyAt(diagonal, board)) moves.push(diagonal);
     }
     return moves;
   }

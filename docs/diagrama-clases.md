@@ -28,6 +28,7 @@ flowchart TB
     end
     subgraph DOMAIN["domain · reglas del ajedrez"]
       Game["Game"] --> Board["Board"] --> Piece["Piece"]
+      Setup[["«interface» IBoardSetup"]] -.->|crea| Board
     end
   end
 
@@ -43,13 +44,14 @@ flowchart TB
   Service -.->|implementa| InPort
   Service -->|usa| OutPort
   Service --> Game
+  Service -->|usa| Setup
 ```
 
 El **núcleo** tiene tres partes, todas dentro de `src/core/`:
 
 | Parte | Qué hace | Puede importar de |
 | --- | --- | --- |
-| `core/domain` | Las reglas del ajedrez: piezas, tablero, jaque, mate | nada |
+| `core/domain` | Las reglas del ajedrez: piezas, tablero (de cualquier tamaño), variantes (`setups/`), jaque, mate | nada |
 | `core/ports` | Las interfaces que forman el borde del hexágono | `domain` |
 | `core/application` | `GameService`: coordina los casos de uso (mover, nueva partida) usando el dominio y los puertos | `ports` y `domain` |
 
@@ -64,7 +66,7 @@ Al ejecutar, el orden de las llamadas es UI → `GameService` → repositorio. P
 
 ## 2. Clases de la arquitectura
 
-Puertos, servicio y adaptadores. El estereotipo de cada clase (`«...»`) dice en qué parte del hexágono vive. Del dominio solo se muestran `Game` y `Board`, que es donde se conectan; el detalle está en la sección 3.
+Puertos, servicio y adaptadores. El estereotipo de cada clase (`«...»`) dice en qué parte del hexágono vive. Del dominio solo se muestran `Game`, `Board` y los setups, que es donde se conectan; el detalle está en la sección 3.
 
 ```mermaid
 classDiagram
@@ -80,9 +82,11 @@ classDiagram
   }
   class BoardMapper {
     <<adaptador de entrada>>
-    -LETTERS$
+    -letterPieces: Map~string, PieceRender~
     +toPosition(board: Board) PositionDataType
+    +toPieces(board: Board) PieceRenderObject
     -pieceCode(piece: Piece) string
+    -letterPiece(code: string) PieceRender
   }
   class SquareHighlighter {
     <<adaptador de entrada>>
@@ -108,6 +112,7 @@ classDiagram
   class GameService {
     <<núcleo · aplicación>>
     -repository: GameRepositoryPort
+    -setup: IBoardSetup
     -game: Game
     +newGame() void
     +move(from: Square, to: Square) boolean
@@ -115,6 +120,7 @@ classDiagram
     +getBoard() Board
     +getTurn() Color
     +getStatus() GameStatus
+    -createGame() Game
   }
   class GameRepositoryPort {
     <<interface · núcleo · puerto de salida>>
@@ -134,6 +140,14 @@ classDiagram
   class Board {
     <<núcleo · dominio>>
   }
+  class IBoardSetup {
+    <<interface · núcleo · dominio>>
+    +create() Board
+  }
+  class StandardSetup {
+    <<núcleo · dominio>>
+    +create() Board
+  }
 
   class main["main.tsx"] {
     <<composition root>>
@@ -148,13 +162,16 @@ classDiagram
   GameService ..|> GameServicePort : implementa
   GameService --> GameRepositoryPort : usa
   GameService --> Game : coordina
+  GameService --> IBoardSetup : usa
   Game *-- Board
+  StandardSetup ..|> IBoardSetup : implementa
 
   InMemoryGameRepository ..|> GameRepositoryPort : implementa
 
   main ..> ChessBoardView : crea
   main ..> GameService : crea
   main ..> InMemoryGameRepository : crea
+  main ..> StandardSetup : crea
 ```
 
 ## 3. Clases del dominio
@@ -168,7 +185,6 @@ classDiagram
   class Game {
     -board: Board
     -turn: Color
-    +standard()$ Game
     +move(from: Square, to: Square) boolean
     +legalMovesFrom(from: Square) Square[]
     +isInCheck() boolean
@@ -182,8 +198,12 @@ classDiagram
     -opposite(color: Color)$ Color
   }
   class Board {
+    -files: number
+    -ranks: number
     -pieces: Map~string, Piece~
-    +initial()$ Board
+    +getFiles() number
+    +getRanks() number
+    +contains(square: Square) boolean
     +pieceAt(square: Square) Piece
     +isEmpty(square: Square) boolean
     +place(square: Square, piece: Piece) void
@@ -200,45 +220,46 @@ classDiagram
     +name() string
     +equals(other: Square) boolean
     +offset(fileDelta: number, rankDelta: number) Square
-    +isOnBoard() boolean
   }
   class Piece {
     <<abstract>>
     #color: Color
     +getColor() Color
-    +getType()* PieceType
+    +getSymbol()* string
+    +isKing() boolean
     +getMoves(from: Square, board: Board)* Square[]
     #slide(from, board, directions) Square[]
     #jump(from, board, offsets) Square[]
     #isEnemyAt(square: Square, board: Board) boolean
   }
   class King {
-    -OFFSETS$
-    +getType() PieceType
+    +OFFSETS$
+    +getSymbol() string
+    +isKing() boolean
     +getMoves(from, board) Square[]
   }
   class Queen {
-    -DIRECTIONS$
-    +getType() PieceType
+    +DIRECTIONS$
+    +getSymbol() string
     +getMoves(from, board) Square[]
   }
   class Rook {
-    -DIRECTIONS$
-    +getType() PieceType
+    +DIRECTIONS$
+    +getSymbol() string
     +getMoves(from, board) Square[]
   }
   class Bishop {
-    -DIRECTIONS$
-    +getType() PieceType
+    +DIRECTIONS$
+    +getSymbol() string
     +getMoves(from, board) Square[]
   }
   class Knight {
-    -OFFSETS$
-    +getType() PieceType
+    +OFFSETS$
+    +getSymbol() string
     +getMoves(from, board) Square[]
   }
   class Pawn {
-    +getType() PieceType
+    +getSymbol() string
     +getMoves(from, board) Square[]
   }
   class Color {
@@ -246,14 +267,12 @@ classDiagram
     WHITE
     BLACK
   }
-  class PieceType {
-    <<enumeration>>
-    KING
-    QUEEN
-    ROOK
-    BISHOP
-    KNIGHT
-    PAWN
+  class IBoardSetup {
+    <<interface>>
+    +create() Board
+  }
+  class StandardSetup {
+    +create() Board
   }
   class GameStatus {
     <<enumeration>>
@@ -264,7 +283,9 @@ classDiagram
   }
 
   Game *-- Board : tiene
-  Board o-- "0..32" Piece : contiene
+  Board o-- "0..*" Piece : contiene
+  StandardSetup ..|> IBoardSetup : implementa
+  StandardSetup ..> Board : crea y llena
   Piece <|-- King
   Piece <|-- Queen
   Piece <|-- Rook
@@ -273,7 +294,6 @@ classDiagram
   Piece <|-- Pawn
   Game ..> GameStatus
   Game ..> Square
-  Piece ..> PieceType
   Piece ..> Color
 ```
 
@@ -294,3 +314,5 @@ classDiagram
 - `ChessBoardView` es una función, porque React exige funciones para usar hooks. Se dibuja como clase para mostrar su rol de adaptador. `main.tsx` es el script de arranque.
 - `Board.entries()` devuelve `[Square, Piece][]`. En el diagrama figura como `Square_Piece[]` porque Mermaid no acepta tuplas.
 - `pieceAt()` y `findKing()` pueden devolver `undefined`, y `load()` puede devolver `null`.
+- `OFFSETS` y `DIRECTIONS` son públicas para que una pieza nueva pueda reutilizarlas (ej. caballo + alfil).
+- `PieceRender` es el tipo de cada función de `PieceRenderObject` (react-chessboard): dibuja una pieza.

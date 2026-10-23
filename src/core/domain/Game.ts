@@ -1,9 +1,12 @@
-import { Board } from './Board';
+import type { Board } from './Board';
 import { Color } from './Color';
 import { GameStatus } from './GameStatus';
 import type { Square } from './Square';
 
-/** La partida: el tablero, de quién es el turno y las reglas para mover. */
+/**
+ * La partida: el tablero, de quién es el turno y las reglas para mover.
+ * No sabe con qué tablero empieza: se lo pasan armado (ver IBoardSetup).
+ */
 export class Game {
   private readonly board: Board;
   private turn: Color;
@@ -11,10 +14,6 @@ export class Game {
   constructor(board: Board, turn: Color = Color.WHITE) {
     this.board = board;
     this.turn = turn;
-  }
-
-  public static standard(): Game {
-    return new Game(Board.initial());
   }
 
   /** Intenta mover. Devuelve false si la partida terminó o el movimiento no es legal. */

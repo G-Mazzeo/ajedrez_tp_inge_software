@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { SquareHighlighter } from '../../../src/adapters/ui/SquareHighlighter';
-import { Board } from '../../../src/core/domain/Board';
+import { StandardSetup } from '../../../src/core/domain/setups/StandardSetup';
 import { Square } from '../../../src/core/domain/Square';
 
 const at = (name: string): Square => Square.fromName(name);
 
 describe('SquareHighlighter', () => {
   const highlighter = new SquareHighlighter();
-  const board = Board.initial();
+  const board = new StandardSetup().create();
 
   it('sin selección ni jaque no pinta nada', () => {
     expect(highlighter.highlight(board, null, [], undefined)).toEqual({});

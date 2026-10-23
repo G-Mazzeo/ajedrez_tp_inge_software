@@ -1,9 +1,10 @@
 /**
- * Una casilla del tablero. Value object: se compara por valor y nunca cambia.
- * file = columna (0..7 = a..h), rank = fila (0..7 = 1..8).
+ * Una casilla. Value object: se compara por valor y nunca cambia.
+ * file = columna (0 = a, 1 = b, ...), rank = fila (0 = 1, 1 = 2, ...).
+ * No sabe si está dentro del tablero: eso depende del tamaño, y lo responde Board.
  */
 export class Square {
-  private static readonly FILES = 'abcdefgh';
+  private static readonly NAME = /^([a-z])(\d+)$/;
 
   public readonly file: number;
   public readonly rank: number;
@@ -13,14 +14,16 @@ export class Square {
     this.rank = rank;
   }
 
-  /** 'e2' -> Square(4, 1) */
+  /** 'e2' -> Square(4, 1). También sirve para tableros grandes: 'j10' -> Square(9, 9). */
   public static fromName(name: string): Square {
-    return new Square(Square.FILES.indexOf(name[0]), Number(name[1]) - 1);
+    const match = Square.NAME.exec(name);
+    if (!match) throw new Error(`Nombre de casilla inválido: ${name}`);
+    return new Square(match[1].charCodeAt(0) - 'a'.charCodeAt(0), Number(match[2]) - 1);
   }
 
   /** Square(4, 1) -> 'e2' */
   public name(): string {
-    return `${Square.FILES[this.file]}${this.rank + 1}`;
+    return `${String.fromCharCode('a'.charCodeAt(0) + this.file)}${this.rank + 1}`;
   }
 
   public equals(other: Square): boolean {
@@ -30,9 +33,5 @@ export class Square {
   /** La casilla que está a cierta distancia de esta (puede quedar fuera del tablero). */
   public offset(fileDelta: number, rankDelta: number): Square {
     return new Square(this.file + fileDelta, this.rank + rankDelta);
-  }
-
-  public isOnBoard(): boolean {
-    return this.file >= 0 && this.file < 8 && this.rank >= 0 && this.rank < 8;
   }
 }

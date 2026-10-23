@@ -2,6 +2,7 @@ import type { Board } from '../domain/Board';
 import type { Color } from '../domain/Color';
 import { Game } from '../domain/Game';
 import type { GameStatus } from '../domain/GameStatus';
+import type { IBoardSetup } from '../domain/setups/IBoardSetup';
 import type { Square } from '../domain/Square';
 import type { GameRepositoryPort } from '../ports/GameRepositoryPort';
 import type { GameServicePort } from '../ports/GameServicePort';
@@ -12,15 +13,18 @@ import type { GameServicePort } from '../ports/GameServicePort';
  */
 export class GameService implements GameServicePort {
   private readonly repository: GameRepositoryPort;
+  private readonly setup: IBoardSetup;
   private game: Game;
 
-  constructor(repository: GameRepositoryPort) {
+  /** `setup` decide con qué tablero empieza cada partida nueva (clásico, otro tamaño, otras piezas). */
+  constructor(repository: GameRepositoryPort, setup: IBoardSetup) {
     this.repository = repository;
-    this.game = repository.load() ?? Game.standard();
+    this.setup = setup;
+    this.game = repository.load() ?? this.createGame();
   }
 
   public newGame(): void {
-    this.game = Game.standard();
+    this.game = this.createGame();
     this.repository.save(this.game);
   }
 
@@ -44,5 +48,9 @@ export class GameService implements GameServicePort {
 
   public getStatus(): GameStatus {
     return this.game.getStatus();
+  }
+
+  private createGame(): Game {
+    return new Game(this.setup.create());
   }
 }

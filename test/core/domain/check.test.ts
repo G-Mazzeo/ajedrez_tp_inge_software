@@ -8,6 +8,7 @@ import { King } from '../../../src/core/domain/pieces/King';
 import type { Piece } from '../../../src/core/domain/pieces/Piece';
 import { Queen } from '../../../src/core/domain/pieces/Queen';
 import { Rook } from '../../../src/core/domain/pieces/Rook';
+import { StandardSetup } from '../../../src/core/domain/setups/StandardSetup';
 import { Square } from '../../../src/core/domain/Square';
 
 const at = (name: string): Square => Square.fromName(name);
@@ -27,7 +28,7 @@ function play(game: Game, ...moves: string[]): void {
 
 describe('Board: ataques', () => {
   it('encuentra al rey de cada color', () => {
-    const board = Board.initial();
+    const board = new StandardSetup().create();
     expect(board.findKing(Color.WHITE)?.name()).toBe('e1');
     expect(board.findKing(Color.BLACK)?.name()).toBe('e8');
   });
@@ -39,7 +40,7 @@ describe('Board: ataques', () => {
   });
 
   it('clone() devuelve una copia independiente', () => {
-    const board = Board.initial();
+    const board = new StandardSetup().create();
     const copy = board.clone();
     copy.move(at('e2'), at('e4'));
     expect(board.isEmpty(at('e4'))).toBe(true);
@@ -49,7 +50,7 @@ describe('Board: ataques', () => {
 
 describe('Game: jaque', () => {
   it('al empezar no hay jaque', () => {
-    const game = Game.standard();
+    const game = new Game(new StandardSetup().create());
     expect(game.isInCheck()).toBe(false);
     expect(game.getStatus()).toBe(GameStatus.PLAYING);
   });
@@ -85,19 +86,19 @@ describe('Game: jaque', () => {
 
 describe('Game: fin de partida', () => {
   it('detecta el jaque mate (mate del loco)', () => {
-    const game = Game.standard();
+    const game = new Game(new StandardSetup().create());
     play(game, 'f2-f3', 'e7-e5', 'g2-g4', 'd8-h4');
     expect(game.getStatus()).toBe(GameStatus.CHECKMATE);
   });
 
   it('detecta el jaque mate (mate del pastor)', () => {
-    const game = Game.standard();
+    const game = new Game(new StandardSetup().create());
     play(game, 'e2-e4', 'e7-e5', 'f1-c4', 'b8-c6', 'd1-h5', 'g8-f6', 'h5-f7');
     expect(game.getStatus()).toBe(GameStatus.CHECKMATE);
   });
 
   it('después del mate no se puede mover', () => {
-    const game = Game.standard();
+    const game = new Game(new StandardSetup().create());
     play(game, 'f2-f3', 'e7-e5', 'g2-g4', 'd8-h4');
     expect(game.move(at('a2'), at('a3'))).toBe(false);
   });

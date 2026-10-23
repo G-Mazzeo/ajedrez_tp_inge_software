@@ -8,6 +8,7 @@ import { Pawn } from '../../../src/core/domain/pieces/Pawn';
 import type { Piece } from '../../../src/core/domain/pieces/Piece';
 import { Queen } from '../../../src/core/domain/pieces/Queen';
 import { Rook } from '../../../src/core/domain/pieces/Rook';
+import { StandardSetup } from '../../../src/core/domain/setups/StandardSetup';
 import { Square } from '../../../src/core/domain/Square';
 
 /** Nombres de las casillas a las que puede ir la pieza que está en `from`, ordenados. */
@@ -27,7 +28,7 @@ function boardWith(pieces: Record<string, Piece>): Board {
 }
 
 describe('movimientos en la posición inicial', () => {
-  const board = Board.initial();
+  const board = new StandardSetup().create();
 
   it('el caballo salta por encima de los peones', () => {
     expect(movesOf(board, 'b1')).toEqual(['a3', 'c3']);
@@ -60,5 +61,22 @@ describe('capturas', () => {
   it('el peón captura en diagonal y no puede avanzar si está tapado', () => {
     const board = boardWith({ e4: new Pawn(Color.WHITE), e5: new Pawn(Color.BLACK), d5: new Knight(Color.BLACK) });
     expect(movesOf(board, 'e4')).toEqual(['d5']);
+  });
+});
+
+describe('peones', () => {
+  it('el peón negro avanza hacia abajo y captura en diagonal', () => {
+    const board = boardWith({ e5: new Pawn(Color.BLACK), d4: new Knight(Color.WHITE), f4: new Pawn(Color.BLACK) });
+    expect(movesOf(board, 'e5')).toEqual(['d4', 'e4']);
+  });
+
+  it('en el borde del tablero solo mira hacia adentro', () => {
+    const board = boardWith({ a2: new Pawn(Color.WHITE), b3: new Rook(Color.BLACK), h7: new Pawn(Color.BLACK) });
+    expect(movesOf(board, 'a2')).toEqual(['a3', 'a4', 'b3']);
+    expect(movesOf(board, 'h7')).toEqual(['h5', 'h6']);
+  });
+
+  it('fuera de su fila inicial avanza de a uno', () => {
+    expect(movesOf(boardWith({ e3: new Pawn(Color.WHITE) }), 'e3')).toEqual(['e4']);
   });
 });
