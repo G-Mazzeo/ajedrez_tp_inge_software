@@ -93,24 +93,37 @@ export function ChessBoardView({ service, mapper, highlighter }: IChessBoardView
   };
 
   return (
-    <main style={{ maxWidth: 560, margin: '2rem auto', fontFamily: 'system-ui, sans-serif' }}>
-      <p>{messages[status]}</p>
-      <Chessboard
-        options={{
-          position,
-          pieces: mapper.toPieces(board),
-          chessboardColumns: board.getFiles(),
-          chessboardRows: board.getRanks(),
-          squareStyles,
-          onPieceDrag: handlePieceDrag,
-          onPieceDrop: handlePieceDrop,
-          onPieceDragCancel: () => setSelected(null),
-          onSquareClick: handleSquareClick,
-        }}
-      />
-      <button style={{ marginTop: '1rem' }} onClick={handleNewGame}>
-        Nueva partida
-      </button>
+    <main
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap', // en pantallas angostas el panel baja debajo del tablero
+        alignItems: 'flex-start',
+        gap: '1.5rem',
+        maxWidth: 820,
+        margin: '2rem auto',
+        fontFamily: 'system-ui, sans-serif',
+      }}
+    >
+      <div style={{ flex: '0 1 560px' }}>
+        <Chessboard
+          options={{
+            position,
+            pieces: mapper.toPieces(board),
+            chessboardColumns: board.getFiles(),
+            chessboardRows: board.getRanks(),
+            squareStyles,
+            onPieceDrag: handlePieceDrag,
+            onPieceDrop: handlePieceDrop,
+            onPieceDragCancel: () => setSelected(null),
+            onSquareClick: handleSquareClick,
+          }}
+        />
+      </div>
+      {/* Panel a la derecha del tablero: estado de la partida y botón. */}
+      <aside style={{ display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: 180 }}>
+        <p style={{ margin: 0 }}>{messages[status]}</p>
+        <button onClick={handleNewGame}>Nueva partida</button>
+      </aside>
     </main>
   );
 }
