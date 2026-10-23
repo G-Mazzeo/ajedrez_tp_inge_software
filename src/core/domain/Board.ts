@@ -4,6 +4,7 @@ import { King } from './pieces/King';
 import { Knight } from './pieces/Knight';
 import { Pawn } from './pieces/Pawn';
 import type { Piece } from './pieces/Piece';
+import { PieceType } from './PieceType';
 import { Queen } from './pieces/Queen';
 import { Rook } from './pieces/Rook';
 import { Square } from './Square';
@@ -48,5 +49,24 @@ export class Board {
 
   public entries(): [Square, Piece][] {
     return [...this.pieces].map(([name, piece]): [Square, Piece] => [Square.fromName(name), piece]);
+  }
+
+  public findKing(color: Color): Square | undefined {
+    return this.entries().find(([, piece]) => piece.getType() === PieceType.KING && piece.getColor() === color)?.[0];
+  }
+
+  /** ¿Alguna pieza de `attacker` puede llegar a esta casilla? */
+  public isAttackedBy(square: Square, attacker: Color): boolean {
+    return this.entries().some(
+      ([from, piece]) =>
+        piece.getColor() === attacker && piece.getMoves(from, this).some((target) => target.equals(square)),
+    );
+  }
+
+  /** Copia para simular un movimiento sin tocar este tablero. Las piezas no cambian, se pueden compartir. */
+  public clone(): Board {
+    const copy = new Board();
+    for (const [square, piece] of this.entries()) copy.place(square, piece);
+    return copy;
   }
 }

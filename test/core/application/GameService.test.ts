@@ -3,6 +3,7 @@ import { GameService } from '../../../src/core/application/GameService';
 import { Board } from '../../../src/core/domain/Board';
 import { Color } from '../../../src/core/domain/Color';
 import { Game } from '../../../src/core/domain/Game';
+import { GameStatus } from '../../../src/core/domain/GameStatus';
 import { Square } from '../../../src/core/domain/Square';
 import type { GameRepositoryPort } from '../../../src/core/ports/GameRepositoryPort';
 
@@ -54,5 +55,14 @@ describe('GameService', () => {
     service.newGame();
     expect(service.getTurn()).toBe(Color.WHITE);
     expect(service.getBoard().isEmpty(at('e4'))).toBe(true);
+  });
+});
+
+describe('GameService: estado', () => {
+  it('expone el estado de la partida', () => {
+    const service = new GameService(new FakeGameRepository());
+    expect(service.getStatus()).toBe(GameStatus.PLAYING);
+    for (const [from, to] of [['f2', 'f3'], ['e7', 'e5'], ['g2', 'g4'], ['d8', 'h4']]) service.move(at(from), at(to));
+    expect(service.getStatus()).toBe(GameStatus.CHECKMATE);
   });
 });

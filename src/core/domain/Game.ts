@@ -1,5 +1,6 @@
 import { Board } from './Board';
 import { Color } from './Color';
+import { GameStatus } from './GameStatus';
 import type { Square } from './Square';
 
 /** La partida: el tablero, de quién es el turno y las reglas para mover. */
@@ -16,17 +17,34 @@ export class Game {
     return new Game(Board.initial());
   }
 
-  /** Intenta mover. Devuelve false si no hay pieza, no es su turno o la pieza no puede ir ahí. */
+  /** Intenta mover. Devuelve false si la partida terminó o el movimiento no es legal. */
   public move(from: Square, to: Square): boolean {
-    const piece = this.board.pieceAt(from);
-    if (!piece || piece.getColor() !== this.turn) return false;
+    if (this.isOver()) return false;
 
-    const canReach = piece.getMoves(from, this.board).some((square) => square.equals(to));
-    if (!canReach) return false;
+    const isLegal = this.legalMovesFrom(from).some((square) => square.equals(to));
+    if (!isLegal) return false;
 
     this.board.move(from, to);
-    this.turn = this.turn === Color.WHITE ? Color.BLACK : Color.WHITE;
+    this.turn = Game.opposite(this.turn);
     return true;
+  }
+
+  /** Movimientos de la pieza que está en `from` que no dejan al propio rey en jaque. */
+  public legalMovesFrom(from: Square): Square[] {
+    const piece = this.board.pieceAt(from);
+    if (!piece || piece.getColor() !== this.turn) return [];
+    return piece.getMoves(from, this.board).filter((to) => !this.leavesKingInCheck(from, to));
+  }
+
+  /** ¿El rey del jugador que mueve está atacado? */
+  public isInCheck(): boolean {
+    return Game.isKingAttacked(this.board, this.turn);
+  }
+
+  public getStatus(): GameStatus {
+    const inCheck = this.isInCheck();
+    if (!this.hasLegalMoves()) return inCheck ? GameStatus.CHECKMATE : GameStatus.STALEMATE;
+    return inCheck ? GameStatus.CHECK : GameStatus.PLAYING;
   }
 
   public getBoard(): Board {
@@ -35,5 +53,32 @@ export class Game {
 
   public getTurn(): Color {
     return this.turn;
+  }
+
+  private isOver(): boolean {
+    const status = this.getStatus();
+    return status === GameStatus.CHECKMATE || status === GameStatus.STALEMATE;
+  }
+
+  private hasLegalMoves(): boolean {
+    return this.board
+      .entries()
+      .some(([from, piece]) => piece.getColor() === this.turn && this.legalMovesFrom(from).length > 0);
+  }
+
+  /** Simula el movimiento en una copia del tablero y mira si el rey propio queda atacado. */
+  private leavesKingInCheck(from: Square, to: Square): boolean {
+    const simulated = this.board.clone();
+    simulated.move(from, to);
+    return Game.isKingAttacked(simulated, this.turn);
+  }
+
+  private static isKingAttacked(board: Board, color: Color): boolean {
+    const king = board.findKing(color);
+    return king !== undefined && board.isAttackedBy(king, Game.opposite(color));
+  }
+
+  private static opposite(color: Color): Color {
+    return color === Color.WHITE ? Color.BLACK : Color.WHITE;
   }
 }

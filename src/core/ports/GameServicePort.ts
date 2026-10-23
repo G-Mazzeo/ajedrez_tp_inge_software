@@ -1,5 +1,6 @@
 import type { Board } from '../domain/Board';
 import type { Color } from '../domain/Color';
+import type { GameStatus } from '../domain/GameStatus';
 import type { Square } from '../domain/Square';
 
 /**
@@ -11,4 +12,5 @@ export interface GameServicePort {
   move(from: Square, to: Square): boolean;
   getBoard(): Board;
   getTurn(): Color;
+  getStatus(): GameStatus;
 }

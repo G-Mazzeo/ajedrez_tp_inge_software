@@ -1,6 +1,7 @@
 import type { Board } from '../domain/Board';
 import type { Color } from '../domain/Color';
 import { Game } from '../domain/Game';
+import type { GameStatus } from '../domain/GameStatus';
 import type { Square } from '../domain/Square';
 import type { GameRepositoryPort } from '../ports/GameRepositoryPort';
 import type { GameServicePort } from '../ports/GameServicePort';
@@ -35,5 +36,9 @@ export class GameService implements GameServicePort {
 
   public getTurn(): Color {
     return this.game.getTurn();
+  }
+
+  public getStatus(): GameStatus {
+    return this.game.getStatus();
   }
 }

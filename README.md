@@ -21,7 +21,8 @@ src/
 │   │   ├── Color.ts, PieceType.ts enums
 │   │   ├── Square.ts              casilla (value object)
 │   │   ├── Board.ts               qué pieza hay en cada casilla + posición inicial
-│   │   ├── Game.ts                partida: turno y validación de movimientos
+│   │   ├── Game.ts                partida: turno, movimientos legales, jaque, mate y ahogado
+│   │   ├── GameStatus.ts          PLAYING, CHECK, CHECKMATE, STALEMATE
 │   │   └── pieces/                Piece (abstracta) + King, Queen, Rook, Bishop, Knight, Pawn
 │   ├── ports/
 │   │   ├── GameServicePort.ts     ENTRADA: lo que el núcleo ofrece
@@ -82,4 +83,4 @@ Al ejecutar, el orden es UI → GameService → repositorio, pero en el código 
 
 ## Pendiente
 
-Jaque (hoy se puede dejar el rey en jaque y hasta comerlo), jaque mate y ahogado, enroque, captura al paso, coronación, persistencia en `localStorage`.
+Enroque, captura al paso, coronación, tablas por repetición o regla de 50 movimientos, persistencia en `localStorage`.
