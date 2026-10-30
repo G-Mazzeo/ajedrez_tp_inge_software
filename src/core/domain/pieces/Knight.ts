@@ -1,16 +1,17 @@
-import type { Board } from '../Board';
-import type { Square } from '../Square';
-import { type Direction, Piece } from './Piece';
+import type { Color } from '../Color';
+import type { Direction } from '../movements/IMovementStrategy';
+import { JumpMovement } from '../movements/JumpMovement';
+import { Piece } from './Piece';
 
 export class Knight extends Piece {
   /** Públicas para que una pieza nueva pueda combinarlas (ej. caballo + alfil). */
   public static readonly OFFSETS: readonly Direction[] = [[1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2]];
 
-  public getSymbol(): string {
-    return 'N';
+  constructor(color: Color) {
+    super(color, new JumpMovement(Knight.OFFSETS));
   }
 
-  public getMoves(from: Square, board: Board): Square[] {
-    return this.jump(from, board, Knight.OFFSETS);
+  public getSymbol(): string {
+    return 'N';
   }
 }

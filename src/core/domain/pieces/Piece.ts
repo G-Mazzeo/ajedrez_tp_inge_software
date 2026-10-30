@@ -1,22 +1,23 @@
 import type { Board } from '../Board';
 import type { Color } from '../Color';
+import type { IMovementStrategy } from '../movements/IMovementStrategy';
 import type { Square } from '../Square';
-
-/** [columnas, filas] que se desplaza una pieza en un paso. */
-export type Direction = readonly [number, number];
 
 /** Una clase de pieza concreta: con el color alcanza para crearla (ej. `Queen` al coronar). */
 export type PieceClass = new (color: Color) => Piece;
 
 /**
- * Una pieza. Cada subclase sabe cómo se mueve (polimorfismo):
- * Game le pide los movimientos sin saber qué pieza es.
+ * Una pieza. Herencia para lo que la pieza ES (su letra, si es rey, si corona);
+ * composición para cómo SE MUEVE: cada subclase le pasa una estrategia (IMovementStrategy) y getMoves le delega.
+ * Game y Board le piden los movimientos sin saber qué pieza es ni qué estrategia usa.
  */
 export abstract class Piece {
-  protected readonly color: Color;
+  private readonly color: Color;
+  private readonly movement: IMovementStrategy;
 
-  constructor(color: Color) {
+  constructor(color: Color, movement: IMovementStrategy) {
     this.color = color;
+    this.movement = movement;
   }
 
   public getColor(): Color {
@@ -37,31 +38,7 @@ export abstract class Piece {
   }
 
   /** Casillas a las que la pieza puede ir desde `from`. Todavía no contempla jaque. */
-  public abstract getMoves(from: Square, board: Board): Square[];
-
-  /** Torre, alfil y dama: avanzan en cada dirección hasta chocar con algo. */
-  protected slide(from: Square, board: Board, directions: readonly Direction[]): Square[] {
-    const moves: Square[] = [];
-    for (const [fileDelta, rankDelta] of directions) {
-      let current = from.offset(fileDelta, rankDelta);
-      while (board.contains(current) && board.isEmpty(current)) {
-        moves.push(current);
-        current = current.offset(fileDelta, rankDelta);
-      }
-      if (board.contains(current) && this.isEnemyAt(current, board)) moves.push(current);
-    }
-    return moves;
-  }
-
-  /** Rey y caballo: un solo salto en cada dirección. */
-  protected jump(from: Square, board: Board, offsets: readonly Direction[]): Square[] {
-    return offsets
-      .map(([fileDelta, rankDelta]) => from.offset(fileDelta, rankDelta))
-      .filter((square) => board.contains(square) && (board.isEmpty(square) || this.isEnemyAt(square, board)));
-  }
-
-  protected isEnemyAt(square: Square, board: Board): boolean {
-    const other = board.pieceAt(square);
-    return other !== undefined && other.getColor() !== this.color;
+  public getMoves(from: Square, board: Board): Square[] {
+    return this.movement.getMoves(from, board, this.color);
   }
 }

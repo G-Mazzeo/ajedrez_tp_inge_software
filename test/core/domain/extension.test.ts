@@ -4,6 +4,9 @@ import { Board } from '../../../src/core/domain/Board';
 import { Color } from '../../../src/core/domain/Color';
 import { Game } from '../../../src/core/domain/Game';
 import { GameStatus } from '../../../src/core/domain/GameStatus';
+import { CombinedMovement } from '../../../src/core/domain/movements/CombinedMovement';
+import { JumpMovement } from '../../../src/core/domain/movements/JumpMovement';
+import { SlideMovement } from '../../../src/core/domain/movements/SlideMovement';
 import { Bishop } from '../../../src/core/domain/pieces/Bishop';
 import { King } from '../../../src/core/domain/pieces/King';
 import { Knight } from '../../../src/core/domain/pieces/Knight';
@@ -16,14 +19,14 @@ import type { GameRepositoryPort } from '../../../src/core/ports/GameRepositoryP
 
 // Estas clases viven solo en el test: prueban que el núcleo se extiende SIN modificar ninguna clase existente.
 
-/** Pieza nueva: se mueve como caballo y como alfil. */
+/** Pieza nueva: se mueve como caballo y como alfil. Combina estrategias que ya existen, sin código de movimiento propio. */
 class Archbishop extends Piece {
-  public getSymbol(): string {
-    return 'A';
+  constructor(color: Color) {
+    super(color, new CombinedMovement([new JumpMovement(Knight.OFFSETS), new SlideMovement(Bishop.DIRECTIONS)]));
   }
 
-  public getMoves(from: Square, board: Board): Square[] {
-    return [...this.jump(from, board, Knight.OFFSETS), ...this.slide(from, board, Bishop.DIRECTIONS)];
+  public getSymbol(): string {
+    return 'A';
   }
 }
 

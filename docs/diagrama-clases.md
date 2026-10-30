@@ -27,7 +27,7 @@ flowchart TB
       Service["GameService"]
     end
     subgraph DOMAIN["domain · reglas del ajedrez"]
-      Game["Game"] --> Board["Board"] --> Piece["Piece"]
+      Game["Game"] --> Board["Board"] --> Piece["Piece"] --> Movement[["«interface» IMovementStrategy"]]
       Setup[["«interface» IBoardSetup"]] -.->|crea| Board
     end
   end
@@ -51,7 +51,7 @@ El **núcleo** tiene tres partes, todas dentro de `src/core/`:
 
 | Parte | Qué hace | Puede importar de |
 | --- | --- | --- |
-| `core/domain` | Las reglas del ajedrez: piezas, tablero (de cualquier tamaño), variantes (`setups/`), jaque, mate | nada |
+| `core/domain` | Las reglas del ajedrez: piezas, cómo se mueven (`movements/`), tablero (de cualquier tamaño), variantes (`setups/`), jaque, mate, coronación | nada |
 | `core/ports` | Las interfaces que forman el borde del hexágono | `domain` |
 | `core/application` | `GameService`: coordina los casos de uso (mover, nueva partida) usando el dominio y los puertos | `ports` y `domain` |
 
@@ -216,6 +216,7 @@ classDiagram
     +contains(square: Square) boolean
     +pieceAt(square: Square) Piece
     +isEmpty(square: Square) boolean
+    +hasEnemy(square: Square, color: Color) boolean
     +place(square: Square, piece: Piece) void
     +move(from: Square, to: Square) void
     +entries() Square_Piece[]
@@ -233,46 +234,56 @@ classDiagram
   }
   class Piece {
     <<abstract>>
-    #color: Color
+    -color: Color
+    -movement: IMovementStrategy
     +getColor() Color
     +getSymbol()* string
     +isKing() boolean
     +canPromote() boolean
-    +getMoves(from: Square, board: Board)* Square[]
-    #slide(from, board, directions) Square[]
-    #jump(from, board, offsets) Square[]
-    #isEnemyAt(square: Square, board: Board) boolean
+    +getMoves(from: Square, board: Board) Square[]
   }
   class King {
     +OFFSETS$
     +getSymbol() string
     +isKing() boolean
-    +getMoves(from, board) Square[]
   }
   class Queen {
-    +DIRECTIONS$
     +getSymbol() string
-    +getMoves(from, board) Square[]
   }
   class Rook {
     +DIRECTIONS$
     +getSymbol() string
-    +getMoves(from, board) Square[]
   }
   class Bishop {
     +DIRECTIONS$
     +getSymbol() string
-    +getMoves(from, board) Square[]
   }
   class Knight {
     +OFFSETS$
     +getSymbol() string
-    +getMoves(from, board) Square[]
   }
   class Pawn {
     +getSymbol() string
     +canPromote() boolean
-    +getMoves(from, board) Square[]
+  }
+  class IMovementStrategy {
+    <<interface>>
+    +getMoves(from: Square, board: Board, color: Color) Square[]
+  }
+  class SlideMovement {
+    -directions: Direction[]
+    +getMoves(from, board, color) Square[]
+  }
+  class JumpMovement {
+    -offsets: Direction[]
+    +getMoves(from, board, color) Square[]
+  }
+  class PawnMovement {
+    +getMoves(from, board, color) Square[]
+  }
+  class CombinedMovement {
+    -movements: IMovementStrategy[]
+    +getMoves(from, board, color) Square[]
   }
   class Color {
     <<enumeration>>
@@ -304,6 +315,18 @@ classDiagram
   Piece <|-- Bishop
   Piece <|-- Knight
   Piece <|-- Pawn
+  Piece o-- "1" IMovementStrategy : se mueve con
+  SlideMovement ..|> IMovementStrategy
+  JumpMovement ..|> IMovementStrategy
+  PawnMovement ..|> IMovementStrategy
+  CombinedMovement ..|> IMovementStrategy
+  CombinedMovement o-- "1..*" IMovementStrategy : suma
+  Rook ..> SlideMovement : crea
+  Bishop ..> SlideMovement : crea
+  Queen ..> SlideMovement : crea
+  King ..> JumpMovement : crea
+  Knight ..> JumpMovement : crea
+  Pawn ..> PawnMovement : crea
   Game ..> GameStatus
   Game ..> Square
   Game ..> Queen : corona por defecto
@@ -327,7 +350,9 @@ classDiagram
 - `ChessBoardView` es una función, porque React exige funciones para usar hooks. Se dibuja como clase para mostrar su rol de adaptador. `main.tsx` es el script de arranque.
 - `Board.entries()` devuelve `[Square, Piece][]`. En el diagrama figura como `Square_Piece[]` porque Mermaid no acepta tuplas.
 - `pieceAt()` y `findKing()` pueden devolver `undefined`, y `load()` puede devolver `null`.
-- `OFFSETS` y `DIRECTIONS` son públicas para que una pieza nueva pueda reutilizarlas (ej. caballo + alfil).
+- Movimientos con **Strategy**: `Piece` es el contexto y guarda un `IMovementStrategy`; `getMoves()` le delega. Cada subclase elige su estrategia en el constructor (la torre, `SlideMovement` con sus 4 direcciones). Herencia para lo que la pieza *es* (letra, rey, corona), composición para cómo *se mueve*.
+- `CombinedMovement` suma varias estrategias: así se arma una pieza nueva sin código de movimiento propio (ej. arzobispo = `JumpMovement(Knight.OFFSETS)` + `SlideMovement(Bishop.DIRECTIONS)`).
+- `OFFSETS` y `DIRECTIONS` son públicas para reutilizarlas: la dama usa las de la torre y el alfil. `Direction` es `[columnas, filas]` y está definido junto a `IMovementStrategy`.
 - `PieceClass` es cualquier clase de pieza (`new (color) => Piece`), definida junto a `Piece`. `Game.move` la recibe para saber en qué corona un peón; el repositorio la usa para recrear las piezas por su letra.
 - Coronación: `canPromote()` funciona como `isKing()`, solo `Pawn` devuelve `true`. Cuando un peón llega a la última fila, `Game` lo reemplaza en el tablero por una pieza nueva (no se puede elegir rey ni peón). `promotion` en `ChessBoardView` guarda la jugada mientras el usuario elige.
 - `KeyValueStorage` es la parte de `localStorage` que usa el repositorio (`getItem`, `setItem`); en los tests se le pasa uno falso.

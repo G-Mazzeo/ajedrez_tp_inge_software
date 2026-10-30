@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { BoardMapper } from '../../../src/adapters/ui/BoardMapper';
 import { Board } from '../../../src/core/domain/Board';
 import { Color } from '../../../src/core/domain/Color';
+import { JumpMovement } from '../../../src/core/domain/movements/JumpMovement';
 import { Piece } from '../../../src/core/domain/pieces/Piece';
 import { Queen } from '../../../src/core/domain/pieces/Queen';
 import { StandardSetup } from '../../../src/core/domain/setups/StandardSetup';
@@ -10,12 +11,12 @@ import { Square } from '../../../src/core/domain/Square';
 
 /** Una pieza que react-chessboard no conoce. */
 class Camel extends Piece {
-  public getSymbol(): string {
-    return 'C';
+  constructor(color: Color) {
+    super(color, new JumpMovement([[1, 3], [3, 1], [3, -1], [1, -3], [-1, -3], [-3, -1], [-3, 1], [-1, 3]]));
   }
 
-  public getMoves(): Square[] {
-    return [];
+  public getSymbol(): string {
+    return 'C';
   }
 }
 

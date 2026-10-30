@@ -38,6 +38,12 @@ export class Board {
     return !this.pieces.has(square.name());
   }
 
+  /** ¿Hay una pieza rival de `color` en la casilla? Lo usan las estrategias de movimiento para saber qué es captura. */
+  public hasEnemy(square: Square, color: Color): boolean {
+    const piece = this.pieceAt(square);
+    return piece !== undefined && piece.getColor() !== color;
+  }
+
   public place(square: Square, piece: Piece): void {
     if (!this.contains(square)) throw new Error(`${square.name()} está fuera del tablero`);
     this.pieces.set(square.name(), piece);

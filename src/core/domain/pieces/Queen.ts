@@ -1,16 +1,16 @@
-import type { Board } from '../Board';
-import type { Square } from '../Square';
-import { type Direction, Piece } from './Piece';
+import type { Color } from '../Color';
+import { SlideMovement } from '../movements/SlideMovement';
+import { Bishop } from './Bishop';
+import { Piece } from './Piece';
+import { Rook } from './Rook';
 
+/** La dama se desliza como torre y como alfil: reutiliza las direcciones de las dos. */
 export class Queen extends Piece {
-  /** Públicas para que una pieza nueva pueda combinarlas (ej. caballo + alfil). */
-  public static readonly DIRECTIONS: readonly Direction[] = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+  constructor(color: Color) {
+    super(color, new SlideMovement([...Rook.DIRECTIONS, ...Bishop.DIRECTIONS]));
+  }
 
   public getSymbol(): string {
     return 'Q';
-  }
-
-  public getMoves(from: Square, board: Board): Square[] {
-    return this.slide(from, board, Queen.DIRECTIONS);
   }
 }

@@ -6,6 +6,7 @@ import {
 import { Board } from '../../../src/core/domain/Board';
 import { Color } from '../../../src/core/domain/Color';
 import { Game } from '../../../src/core/domain/Game';
+import { JumpMovement } from '../../../src/core/domain/movements/JumpMovement';
 import { King } from '../../../src/core/domain/pieces/King';
 import { Piece } from '../../../src/core/domain/pieces/Piece';
 import { StandardSetup } from '../../../src/core/domain/setups/StandardSetup';
@@ -26,12 +27,12 @@ class FakeStorage implements KeyValueStorage {
 
 /** Pieza que no está entre las clásicas. */
 class Wazir extends Piece {
-  public getSymbol(): string {
-    return 'W';
+  constructor(color: Color) {
+    super(color, new JumpMovement([[1, 0], [-1, 0], [0, 1], [0, -1]]));
   }
 
-  public getMoves(from: Square, board: Board): Square[] {
-    return this.jump(from, board, [[1, 0], [-1, 0], [0, 1], [0, -1]]);
+  public getSymbol(): string {
+    return 'W';
   }
 }
 

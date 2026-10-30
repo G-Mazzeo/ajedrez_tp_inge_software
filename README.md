@@ -24,6 +24,7 @@ src/
 │   │   ├── Game.ts                partida: turno, movimientos legales, coronación, jaque, mate y ahogado
 │   │   ├── GameStatus.ts          PLAYING, CHECK, CHECKMATE, STALEMATE
 │   │   ├── pieces/                Piece (abstracta) + King, Queen, Rook, Bishop, Knight, Pawn
+│   │   ├── movements/             IMovementStrategy + SlideMovement, JumpMovement, PawnMovement, CombinedMovement
 │   │   └── setups/                IBoardSetup + StandardSetup: tamaño y posición inicial de una variante
 │   ├── ports/
 │   │   ├── GameServicePort.ts     ENTRADA: lo que el núcleo ofrece
@@ -78,16 +79,18 @@ Al ejecutar, el orden es UI → GameService → repositorio, pero en el código 
 | Inversión de dependencias    | `GameService` recibe un `GameRepositoryPort`, no una clase concreta       |
 | Inyección por constructor    | `main.tsx` arma `GameService(repository, setup)`                          |
 | Composition root             | `main.tsx`: único lugar con `new` de adaptadores                          |
-| Polimorfismo / herencia      | `Piece` abstracta, cada subclase implementa `getMoves()`                  |
-| Reutilización por herencia   | `Piece.slide()` y `Piece.jump()`: código común en la clase base, cada pieza pasa sus direcciones |
+| Herencia                     | `Piece` abstracta + una subclase por pieza: lo que la pieza *es* (letra, rey, corona) |
+| Strategy (composición)       | `Piece` guarda un `IMovementStrategy` y `getMoves()` le delega; cada subclase elige el suyo |
+| Composite                    | `CombinedMovement`: varias estrategias se usan como una (piezas mezcladas) |
 | Value object                 | `Square`                                                                  |
 | Repository                   | `GameRepositoryPort` + `LocalStorageGameRepository`                       |
 | Mapper                       | `BoardMapper`                                                             |
-| Abierto/cerrado              | Pieza nueva = subclase de `Piece`; variante nueva = clase `IBoardSetup`. No se toca nada existente |
+| Abierto/cerrado              | Pieza nueva = subclase de `Piece`; movimiento nuevo = clase `IMovementStrategy`; variante nueva = clase `IBoardSetup`. No se toca nada existente |
 
 ## Cómo extenderlo
 
-- **Pieza nueva:** una subclase de `Piece` con `getSymbol()` y `getMoves()`. Puede combinar movimientos ya existentes (`Knight.OFFSETS`, `Bishop.DIRECTIONS`...). La UI la dibuja con su letra.
+- **Pieza nueva:** una subclase de `Piece` con `getSymbol()` que en su constructor le pasa a `super` una estrategia de movimiento. Puede reutilizar las que hay (`new CombinedMovement([new JumpMovement(Knight.OFFSETS), new SlideMovement(Bishop.DIRECTIONS)])`). La UI la dibuja con su letra.
+- **Forma de moverse nueva:** una clase que implemente `IMovementStrategy`.
 - **Coronar en la pieza nueva:** agregarla a `PROMOTION_OPTIONS` en `ChessBoardView.tsx`.
 - **Guardar la pieza nueva:** pasar su clase a `LocalStorageGameRepository` en `main.tsx` (la recrea por su letra al cargar).
 - **Otro tablero:** una clase que implemente `IBoardSetup` y cree un `new Board(columnas, filas)` con sus piezas. Se elige en `main.tsx`.
