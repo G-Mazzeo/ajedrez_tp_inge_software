@@ -5,14 +5,11 @@ import { Bishop } from '../../core/domain/pieces/Bishop';
 import { King } from '../../core/domain/pieces/King';
 import { Knight } from '../../core/domain/pieces/Knight';
 import { Pawn } from '../../core/domain/pieces/Pawn';
-import type { Piece } from '../../core/domain/pieces/Piece';
+import type { Piece, PieceClass } from '../../core/domain/pieces/Piece';
 import { Queen } from '../../core/domain/pieces/Queen';
 import { Rook } from '../../core/domain/pieces/Rook';
 import { Square } from '../../core/domain/Square';
 import type { GameRepositoryPort } from '../../core/ports/GameRepositoryPort';
-
-/** Una clase de pieza concreta: con el color alcanza para crearla. */
-export type PieceClass = new (color: Color) => Piece;
 
 /** Solo lo que este repositorio usa de `localStorage`: así en los tests se le pasa uno falso. */
 export type KeyValueStorage = Pick<Storage, 'getItem' | 'setItem'>;

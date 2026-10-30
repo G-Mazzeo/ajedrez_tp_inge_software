@@ -3,10 +3,14 @@ import { Color } from '../Color';
 import type { Square } from '../Square';
 import { Piece } from './Piece';
 
-/** Avanza uno (o dos desde su fila inicial) y captura en diagonal. Todavía sin coronación ni al paso. */
+/** Avanza uno (o dos desde su fila inicial) y captura en diagonal. Al llegar a la última fila corona (ver Game). Todavía sin al paso. */
 export class Pawn extends Piece {
   public getSymbol(): string {
     return 'P';
+  }
+
+  public canPromote(): boolean {
+    return true;
   }
 
   public getMoves(from: Square, board: Board): Square[] {

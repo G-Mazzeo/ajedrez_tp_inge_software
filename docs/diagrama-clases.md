@@ -75,9 +75,11 @@ classDiagram
   class ChessBoardView {
     <<adaptador de entrada · React>>
     -selected: Square
+    -promotion: from_to
     -handleSquareClick()
     -handlePieceDrag()
     -handlePieceDrop() boolean
+    -promote(pieceClass: PieceClass)
     -handleNewGame()
   }
   class BoardMapper {
@@ -103,7 +105,8 @@ classDiagram
   class GameServicePort {
     <<interface · núcleo · puerto de entrada>>
     +newGame() void
-    +move(from: Square, to: Square) boolean
+    +move(from: Square, to: Square, promoteTo?: PieceClass) boolean
+    +isPromotion(from: Square, to: Square) boolean
     +getLegalMoves(from: Square) Square[]
     +getBoard() Board
     +getTurn() Color
@@ -115,7 +118,8 @@ classDiagram
     -setup: IBoardSetup
     -game: Game
     +newGame() void
-    +move(from: Square, to: Square) boolean
+    +move(from: Square, to: Square, promoteTo?: PieceClass) boolean
+    +isPromotion(from: Square, to: Square) boolean
     +getLegalMoves(from: Square) Square[]
     +getBoard() Board
     +getTurn() Color
@@ -190,7 +194,8 @@ classDiagram
   class Game {
     -board: Board
     -turn: Color
-    +move(from: Square, to: Square) boolean
+    +move(from: Square, to: Square, promoteTo: PieceClass) boolean
+    +isPromotion(from: Square, to: Square) boolean
     +legalMovesFrom(from: Square) Square[]
     +isInCheck() boolean
     +getStatus() GameStatus
@@ -232,6 +237,7 @@ classDiagram
     +getColor() Color
     +getSymbol()* string
     +isKing() boolean
+    +canPromote() boolean
     +getMoves(from: Square, board: Board)* Square[]
     #slide(from, board, directions) Square[]
     #jump(from, board, offsets) Square[]
@@ -265,6 +271,7 @@ classDiagram
   }
   class Pawn {
     +getSymbol() string
+    +canPromote() boolean
     +getMoves(from, board) Square[]
   }
   class Color {
@@ -299,6 +306,7 @@ classDiagram
   Piece <|-- Pawn
   Game ..> GameStatus
   Game ..> Square
+  Game ..> Queen : corona por defecto
   Piece ..> Color
 ```
 
@@ -320,5 +328,7 @@ classDiagram
 - `Board.entries()` devuelve `[Square, Piece][]`. En el diagrama figura como `Square_Piece[]` porque Mermaid no acepta tuplas.
 - `pieceAt()` y `findKing()` pueden devolver `undefined`, y `load()` puede devolver `null`.
 - `OFFSETS` y `DIRECTIONS` son públicas para que una pieza nueva pueda reutilizarlas (ej. caballo + alfil).
-- `KeyValueStorage` es la parte de `localStorage` que usa el repositorio (`getItem`, `setItem`); en los tests se le pasa uno falso. `PieceClass` es cualquier clase de pieza (`new (color) => Piece`): con ellas recrea las piezas por su letra.
+- `PieceClass` es cualquier clase de pieza (`new (color) => Piece`), definida junto a `Piece`. `Game.move` la recibe para saber en qué corona un peón; el repositorio la usa para recrear las piezas por su letra.
+- Coronación: `canPromote()` funciona como `isKing()`, solo `Pawn` devuelve `true`. Cuando un peón llega a la última fila, `Game` lo reemplaza en el tablero por una pieza nueva (no se puede elegir rey ni peón). `promotion` en `ChessBoardView` guarda la jugada mientras el usuario elige.
+- `KeyValueStorage` es la parte de `localStorage` que usa el repositorio (`getItem`, `setItem`); en los tests se le pasa uno falso.
 - `PieceRender` es el tipo de cada función de `PieceRenderObject` (react-chessboard): dibuja una pieza.

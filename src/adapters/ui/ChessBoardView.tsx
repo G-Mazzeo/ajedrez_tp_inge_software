@@ -7,10 +7,23 @@ import {
 } from 'react-chessboard';
 import { Color } from '../../core/domain/Color';
 import { GameStatus } from '../../core/domain/GameStatus';
+import { Bishop } from '../../core/domain/pieces/Bishop';
+import { Knight } from '../../core/domain/pieces/Knight';
+import type { PieceClass } from '../../core/domain/pieces/Piece';
+import { Queen } from '../../core/domain/pieces/Queen';
+import { Rook } from '../../core/domain/pieces/Rook';
 import { Square } from '../../core/domain/Square';
 import type { GameServicePort } from '../../core/ports/GameServicePort';
 import type { BoardMapper } from './BoardMapper';
 import type { SquareHighlighter } from './SquareHighlighter';
+
+/** Piezas que se ofrecen al coronar. Con una pieza nueva (ej. arzobispo), agregarla acá. */
+const PROMOTION_OPTIONS: { pieceClass: PieceClass; label: string }[] = [
+  { pieceClass: Queen, label: 'Dama' },
+  { pieceClass: Rook, label: 'Torre' },
+  { pieceClass: Bishop, label: 'Alfil' },
+  { pieceClass: Knight, label: 'Caballo' },
+];
 
 interface IChessBoardViewProps {
   service: GameServicePort;
@@ -28,6 +41,8 @@ export function ChessBoardView({ service, mapper, highlighter }: IChessBoardView
   const [turn, setTurn] = useState(() => service.getTurn());
   const [status, setStatus] = useState(() => service.getStatus());
   const [selected, setSelected] = useState<Square | null>(null);
+  // Un peón llegó a la última fila: el movimiento espera a que el usuario elija la pieza.
+  const [promotion, setPromotion] = useState<{ from: Square; to: Square } | null>(null);
 
   const board = service.getBoard();
   const targets = selected ? service.getLegalMoves(selected) : [];
@@ -43,14 +58,25 @@ export function ChessBoardView({ service, mapper, highlighter }: IChessBoardView
 
   /** Elige una pieza solo si tiene a dónde ir (así no se marcan piezas del rival). */
   const select = (square: Square): void => {
+    setPromotion(null);
     setSelected(service.getLegalMoves(square).length > 0 ? square : null);
   };
 
   const tryMove = (from: Square, to: Square): boolean => {
     setSelected(null);
+    if (service.isPromotion(from, to)) {
+      setPromotion({ from, to });
+      return false; // la pieza vuelve a su lugar hasta que se elija en qué corona
+    }
     const moved = service.move(from, to);
     if (moved) refresh();
     return moved;
+  };
+
+  const promote = (pieceClass: PieceClass): void => {
+    if (!promotion) return;
+    if (service.move(promotion.from, promotion.to, pieceClass)) refresh();
+    setPromotion(null);
   };
 
   const handlePieceDrag = ({ square }: PieceHandlerArgs): void => {
@@ -80,6 +106,7 @@ export function ChessBoardView({ service, mapper, highlighter }: IChessBoardView
   const handleNewGame = (): void => {
     service.newGame();
     setSelected(null);
+    setPromotion(null);
     refresh();
   };
 
@@ -122,6 +149,17 @@ export function ChessBoardView({ service, mapper, highlighter }: IChessBoardView
       {/* Panel a la derecha del tablero: estado de la partida y botón. */}
       <aside style={{ display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: 180 }}>
         <p style={{ margin: 0 }}>{messages[status]}</p>
+        {promotion && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <p style={{ margin: 0 }}>Coronar en {promotion.to.name()}:</p>
+            {PROMOTION_OPTIONS.map(({ pieceClass, label }) => (
+              <button key={label} onClick={() => promote(pieceClass)}>
+                {label}
+              </button>
+            ))}
+            <button onClick={() => setPromotion(null)}>Cancelar</button>
+          </div>
+        )}
         <button onClick={handleNewGame}>Nueva partida</button>
       </aside>
     </main>

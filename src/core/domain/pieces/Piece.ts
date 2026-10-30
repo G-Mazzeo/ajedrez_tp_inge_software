@@ -5,6 +5,9 @@ import type { Square } from '../Square';
 /** [columnas, filas] que se desplaza una pieza en un paso. */
 export type Direction = readonly [number, number];
 
+/** Una clase de pieza concreta: con el color alcanza para crearla (ej. `Queen` al coronar). */
+export type PieceClass = new (color: Color) => Piece;
+
 /**
  * Una pieza. Cada subclase sabe cómo se mueve (polimorfismo):
  * Game le pide los movimientos sin saber qué pieza es.
@@ -25,6 +28,11 @@ export abstract class Piece {
 
   /** El jaque se calcula sobre el rey. Solo King lo cambia a true. */
   public isKing(): boolean {
+    return false;
+  }
+
+  /** ¿Se cambia por otra pieza al llegar a la última fila? Solo Pawn lo cambia a true. */
+  public canPromote(): boolean {
     return false;
   }
 

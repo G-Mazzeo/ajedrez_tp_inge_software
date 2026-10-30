@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { GameService } from '../../../src/core/application/GameService';
+import { Board } from '../../../src/core/domain/Board';
 import { Color } from '../../../src/core/domain/Color';
 import { Game } from '../../../src/core/domain/Game';
 import { GameStatus } from '../../../src/core/domain/GameStatus';
+import { King } from '../../../src/core/domain/pieces/King';
+import { Pawn } from '../../../src/core/domain/pieces/Pawn';
+import { Rook } from '../../../src/core/domain/pieces/Rook';
 import { StandardSetup } from '../../../src/core/domain/setups/StandardSetup';
 import { Square } from '../../../src/core/domain/Square';
 import type { GameRepositoryPort } from '../../../src/core/ports/GameRepositoryPort';
@@ -55,6 +59,22 @@ describe('GameService', () => {
     service.newGame();
     expect(service.getTurn()).toBe(Color.WHITE);
     expect(service.getBoard().isEmpty(at('e4'))).toBe(true);
+  });
+});
+
+describe('GameService: coronación', () => {
+  it('avisa cuándo corona, corona con la pieza elegida y guarda', () => {
+    const board = new Board();
+    board.place(at('e1'), new King(Color.WHITE));
+    board.place(at('h6'), new King(Color.BLACK));
+    board.place(at('a7'), new Pawn(Color.WHITE));
+    const repository = new FakeGameRepository(new Game(board));
+    const service = new GameService(repository, new StandardSetup());
+
+    expect(service.isPromotion(at('a7'), at('a8'))).toBe(true);
+    expect(service.move(at('a7'), at('a8'), Rook)).toBe(true);
+    expect(service.getBoard().pieceAt(at('a8'))).toBeInstanceOf(Rook);
+    expect(repository.saveCount).toBe(1);
   });
 });
 

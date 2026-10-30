@@ -2,6 +2,7 @@ import type { Board } from '../domain/Board';
 import type { Color } from '../domain/Color';
 import { Game } from '../domain/Game';
 import type { GameStatus } from '../domain/GameStatus';
+import type { PieceClass } from '../domain/pieces/Piece';
 import type { IBoardSetup } from '../domain/setups/IBoardSetup';
 import type { Square } from '../domain/Square';
 import type { GameRepositoryPort } from '../ports/GameRepositoryPort';
@@ -28,10 +29,14 @@ export class GameService implements GameServicePort {
     this.repository.save(this.game);
   }
 
-  public move(from: Square, to: Square): boolean {
-    const moved = this.game.move(from, to);
+  public move(from: Square, to: Square, promoteTo?: PieceClass): boolean {
+    const moved = this.game.move(from, to, promoteTo);
     if (moved) this.repository.save(this.game);
     return moved;
+  }
+
+  public isPromotion(from: Square, to: Square): boolean {
+    return this.game.isPromotion(from, to);
   }
 
   public getLegalMoves(from: Square): Square[] {

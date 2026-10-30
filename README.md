@@ -21,7 +21,7 @@ src/
 │   │   ├── Color.ts               enum
 │   │   ├── Square.ts              casilla (value object)
 │   │   ├── Board.ts               qué pieza hay en cada casilla; tamaño configurable
-│   │   ├── Game.ts                partida: turno, movimientos legales, jaque, mate y ahogado
+│   │   ├── Game.ts                partida: turno, movimientos legales, coronación, jaque, mate y ahogado
 │   │   ├── GameStatus.ts          PLAYING, CHECK, CHECKMATE, STALEMATE
 │   │   ├── pieces/                Piece (abstracta) + King, Queen, Rook, Bishop, Knight, Pawn
 │   │   └── setups/                IBoardSetup + StandardSetup: tamaño y posición inicial de una variante
@@ -88,6 +88,7 @@ Al ejecutar, el orden es UI → GameService → repositorio, pero en el código 
 ## Cómo extenderlo
 
 - **Pieza nueva:** una subclase de `Piece` con `getSymbol()` y `getMoves()`. Puede combinar movimientos ya existentes (`Knight.OFFSETS`, `Bishop.DIRECTIONS`...). La UI la dibuja con su letra.
+- **Coronar en la pieza nueva:** agregarla a `PROMOTION_OPTIONS` en `ChessBoardView.tsx`.
 - **Guardar la pieza nueva:** pasar su clase a `LocalStorageGameRepository` en `main.tsx` (la recrea por su letra al cargar).
 - **Otro tablero:** una clase que implemente `IBoardSetup` y cree un `new Board(columnas, filas)` con sus piezas. Se elige en `main.tsx`.
 
@@ -95,4 +96,4 @@ Ejemplos de las dos cosas en `test/core/domain/extension.test.ts`.
 
 ## Pendiente
 
-Enroque, captura al paso, coronación, tablas por repetición o regla de 50 movimientos.
+Enroque, captura al paso, tablas por repetición o regla de 50 movimientos.
