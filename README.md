@@ -87,6 +87,11 @@ Al ejecutar, el orden es UI → GameService → repositorio, pero en el código 
 | Mapper                       | `BoardMapper`                                                             |
 | Abierto/cerrado              | Pieza nueva = subclase de `Piece`; movimiento nuevo = clase `IMovementStrategy`; variante nueva = clase `IBoardSetup`. No se toca nada existente |
 
+## Documentación
+
+- [Diagrama de clases](docs/diagrama-clases.md)
+- [Decisiones de diseño](docs/decisiones-diseno.md): qué elegimos, por qué y cuándo se rompería cada decisión.
+
 ## Cómo extenderlo
 
 - **Pieza nueva:** una subclase de `Piece` con `getSymbol()` que en su constructor le pasa a `super` una estrategia de movimiento. Puede reutilizar las que hay (`new CombinedMovement([new JumpMovement(Knight.OFFSETS), new SlideMovement(Bishop.DIRECTIONS)])`). La UI la dibuja con su letra.
