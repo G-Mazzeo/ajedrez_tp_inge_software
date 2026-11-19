@@ -2,14 +2,35 @@
 
 Ajedrez para dos jugadores con arquitectura hexagonal. Vite + React + `react-chessboard` para la UI; el núcleo es TypeScript puro.
 
-## Uso
+## Requisitos
+
+- **Node.js 22.13 o superior** (22 LTS o 24 LTS). Vitest y ESLint no funcionan con versiones anteriores. Se verifica con `node -v`.
+- **pnpm 9.15** (es la versión fijada en `package.json`). La forma más simple es activarlo con Corepack, que viene con Node:
+
+  ```bash
+  corepack enable
+  ```
+
+  Sin Corepack: `npm install -g pnpm@9.15.0`.
+
+## Cómo correrlo
 
 ```bash
+git clone https://github.com/G-Mazzeo/ajedrez_tp_inge_software.git
+cd ajedrez_tp_inge_software
 pnpm install
-pnpm dev        # http://localhost:5173
-pnpm test       # tests del núcleo (sin navegador)
-pnpm typecheck
+pnpm dev        # abre el juego en http://localhost:5173
+```
+
+La partida se guarda sola en el navegador (`localStorage`): al recargar la página sigue donde quedó. El botón "Nueva partida" la reinicia.
+
+## Otros comandos
+
+```bash
+pnpm test       # tests del núcleo y de los adaptadores (en Node, sin navegador)
+pnpm typecheck  # chequeo de tipos de TypeScript
 pnpm lint       # convenciones + reglas de arquitectura
+pnpm build      # versión de producción en dist/
 ```
 
 ## Estructura
