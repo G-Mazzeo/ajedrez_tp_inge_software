@@ -123,7 +123,3 @@ Al ejecutar, el orden es UI → GameService → repositorio, pero en el código 
 - **Otro tablero:** una clase que implemente `IBoardSetup` y cree un `new Board(columnas, filas)` con sus piezas. Se elige en `main.tsx`.
 
 Ejemplos de las dos cosas en `test/core/domain/extension.test.ts`.
-
-## Pendiente
-
-Enroque, captura al paso, tablas por repetición o regla de 50 movimientos.
