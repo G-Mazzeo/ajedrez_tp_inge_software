@@ -91,6 +91,7 @@ Al ejecutar, el orden es UI → GameService → repositorio, pero en el código 
 
 - [Diagrama de clases](docs/diagrama-clases.md)
 - [Decisiones de diseño](docs/decisiones-diseno.md): qué elegimos, por qué y cuándo se rompería cada decisión.
+- [Presentación](docs/presentacion.pdf): diapositivas de la exposición en clase.
 
 ## Cómo extenderlo
 
